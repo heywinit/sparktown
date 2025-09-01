@@ -1,3 +1,52 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 @import "./themes.css";
+
+@source "../node_modules/streamdown/dist/index.js";
+
+@layer utilities {
+  /* Automatically apply border-border color to all border utilities */
+  .border {
+    border-color: var(--color-border);
+  }
+
+  .border-0 {
+    border-color: var(--color-border);
+  }
+
+  .border-2 {
+    border-color: var(--color-border);
+  }
+
+  .border-4 {
+    border-color: var(--color-border);
+  }
+
+  .border-8 {
+    border-color: var(--color-border);
+  }
+
+  .border-x {
+    border-color: var(--color-border);
+  }
+
+  .border-y {
+    border-color: var(--color-border);
+  }
+
+  .border-t {
+    border-color: var(--color-border);
+  }
+
+  .border-r {
+    border-color: var(--color-border);
+  }
+
+  .border-b {
+    border-color: var(--color-border);
+  }
+
+  .border-l {
+    border-color: var(--color-border);
+  }
+}
