@@ -3,10 +3,11 @@
 import Layout from "@/components/Layout";
 import SparkdownEditor from "@/components/Editor";
 import TabManager from "@/components/TabManager";
-import FileExplorer from "@/components/FileExplorer";
+import { AppSidebar } from "@/components/app-sidebar";
 import TopBar from "@/components/TopBar";
 import CommandBar from "@/components/CommandBar";
 import { AppProvider, useApp } from "@/lib/context/AppContext";
+import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
 import React, { useEffect } from "react";
 
 function AppContent() {
@@ -36,22 +37,26 @@ function AppContent() {
     <Layout>
       <div className="flex flex-col h-screen w-full">
         <TopBar />
-        <TabManager />
         <div className="flex flex-1 overflow-hidden">
-          <div className="w-64 border-r border-border bg-background">
-            <FileExplorer className="h-full" />
-          </div>
-          <div className="flex-1">
-            <SparkdownEditor className="h-full" />
-          </div>
+          <SidebarProvider>
+            <AppSidebar />
+            <SidebarInset>
+              <div className="flex flex-col h-full w-full">
+                <TabManager />
+                <div className="flex-1 overflow-hidden">
+                  <SparkdownEditor className="h-full" />
+                </div>
+              </div>
+
+              {/* Command Bar */}
+              <CommandBar
+                isOpen={state.isCommandBarOpen}
+                onClose={() => setCommandBarOpen(false)}
+              />
+            </SidebarInset>
+          </SidebarProvider>
         </div>
       </div>
-
-      {/* Command Bar */}
-      <CommandBar
-        isOpen={state.isCommandBarOpen}
-        onClose={() => setCommandBarOpen(false)}
-      />
     </Layout>
   );
 }

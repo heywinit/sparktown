@@ -1,7 +1,6 @@
 import { useId } from "react";
 import {
   FileTextIcon,
-  GlobeIcon,
   HomeIcon,
   LayersIcon,
   UsersIcon,
@@ -15,11 +14,7 @@ import {
   NavigationMenuLink,
   NavigationMenuList,
 } from "@/components/ui/navigation-menu";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
+import { Popover, PopoverTrigger } from "@/components/ui/popover";
 import {
   Tooltip,
   TooltipContent,
@@ -27,7 +22,6 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import Logo from "./Logo";
-import { ThemeToggle } from "./ThemeToggle";
 
 // Navigation links with icons for desktop icon-only navigation
 const navigationLinks = [
@@ -80,31 +74,6 @@ export default function Component() {
                 </svg>
               </Button>
             </PopoverTrigger>
-            <PopoverContent align="start" className="w-36 p-1 md:hidden">
-              <NavigationMenu className="max-w-none *:w-full">
-                <NavigationMenuList className="flex-col items-start gap-0 md:gap-2">
-                  {navigationLinks.map((link, index) => {
-                    const Icon = link.icon;
-                    return (
-                      <NavigationMenuItem key={index} className="w-full">
-                        <NavigationMenuLink
-                          href={link.href}
-                          className="flex-row items-center gap-2 py-1.5"
-                          active={link.active}
-                        >
-                          <Icon
-                            size={16}
-                            className="text-muted-foreground"
-                            aria-hidden="true"
-                          />
-                          <span>{link.label}</span>
-                        </NavigationMenuLink>
-                      </NavigationMenuItem>
-                    );
-                  })}
-                </NavigationMenuList>
-              </NavigationMenu>
-            </PopoverContent>
           </Popover>
           <div className="flex items-center gap-6">
             {/* Logo */}
