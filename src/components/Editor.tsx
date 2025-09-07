@@ -1,126 +1,108 @@
 "use client";
 
-import React, { useState } from "react";
-import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { EyeIcon, EyeOffIcon, SplitIcon } from "lucide-react";
-import Editor from "@monaco-editor/react";
-import { Streamdown } from "streamdown";
+import React, { useEffect, useRef } from "react";
+import { useApp } from "@/lib/context/AppContext";
+import { Editor } from "@monaco-editor/react";
 
 interface EditorProps {
-  content: string;
-  onContentChange: (value: string | undefined) => void;
+  className?: string;
 }
 
-export default function SparkdownEditor({
-  content,
-  onContentChange,
-}: EditorProps) {
-  const [showPreview, setShowPreview] = useState(false);
-  const [isSideBySide, setIsSideBySide] = useState(false);
+export default function SparkdownEditor({ className }: EditorProps) {
+  const { state, updateFileContent, saveFile } = useApp();
+  const { activeTab, files } = state;
+  const editorRef = useRef<any>(null);
+  const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  const togglePreview = () => {
-    setShowPreview(!showPreview);
-    if (isSideBySide) setIsSideBySide(false);
+  const activeFile = activeTab
+    ? files.find((f) => f.id === activeTab.fileId)
+    : null;
+
+  const handleEditorDidMount = (editor: any) => {
+    editorRef.current = editor;
+
+    // Set up auto-save
+    editor.onDidChangeModelContent(() => {
+      if (activeFile) {
+        const content = editor.getValue();
+        updateFileContent(activeFile.id, content);
+
+        // Auto-save after 2 seconds of inactivity
+        if (saveTimeoutRef.current) {
+          clearTimeout(saveTimeoutRef.current);
+        }
+        saveTimeoutRef.current = setTimeout(() => {
+          saveFile(activeFile.id);
+        }, 2000);
+      }
+    });
+
+    // Set up keyboard shortcuts
+    editor.addCommand(0 | 49, () => {
+      // Ctrl/Cmd + S
+      if (activeFile) {
+        saveFile(activeFile.id);
+      }
+    });
   };
 
-  const toggleSideBySide = () => {
-    setIsSideBySide(!isSideBySide);
-    if (!showPreview) setShowPreview(true);
+  const handleEditorChange = (value: string | undefined) => {
+    if (activeFile && value !== undefined) {
+      updateFileContent(activeFile.id, value);
+    }
   };
 
-  const renderPreview = () => {
+  // Clean up timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (saveTimeoutRef.current) {
+        clearTimeout(saveTimeoutRef.current);
+      }
+    };
+  }, []);
+
+  if (!activeFile) {
     return (
-      <div className="p-4 overflow-auto h-full">
-        <Streamdown>{content}</Streamdown>
+      <div className={`flex items-center justify-center h-full ${className}`}>
+        <div className="text-center text-muted-foreground">
+          <div className="text-4xl mb-4">📝</div>
+          <h3 className="text-lg font-semibold mb-2">No file open</h3>
+          <p className="text-sm">
+            Open a file from the explorer to start editing
+          </p>
+        </div>
       </div>
     );
-  };
+  }
 
   return (
-    <div className="flex flex-col h-full">
-      {/* Toolbar */}
-      <div className="flex items-center justify-between p-2 border-b bg-background/50 backdrop-blur-sm">
-        <div className="flex items-center space-x-2">
-          <h1 className="text-lg font-semibold">sparkdown</h1>
-        </div>
-        <div className="flex items-center space-x-2">
-          <Button
-            variant={showPreview ? "default" : "outline"}
-            size="sm"
-            onClick={togglePreview}
-            className="flex items-center space-x-1"
-          >
-            {showPreview ? (
-              <EyeOffIcon className="h-4 w-4" />
-            ) : (
-              <EyeIcon className="h-4 w-4" />
-            )}
-            <span>Preview</span>
-          </Button>
-          {showPreview && (
-            <Button
-              variant={isSideBySide ? "default" : "outline"}
-              size="sm"
-              onClick={toggleSideBySide}
-              className="flex items-center space-x-1"
-            >
-              <SplitIcon className="h-4 w-4" />
-              <span>Side by Side</span>
-            </Button>
-          )}
-        </div>
-      </div>
-
-      {/* Editor and Preview Area */}
-      <div className="flex-1 flex">
-        {!showPreview ? (
-          // Editor only
-          <div className="w-full h-full">
-            <Editor
-              height="100%"
-              defaultLanguage="markdown"
-              value={content}
-              onChange={onContentChange}
-              theme="vs-dark"
-              options={{
-                minimap: { enabled: false },
-                fontSize: 14,
-                lineNumbers: "on",
-                wordWrap: "on",
-                automaticLayout: true,
-                scrollBeyondLastLine: false,
-                padding: { top: 16, bottom: 16 },
-              }}
-            />
-          </div>
-        ) : isSideBySide ? (
-          // Side by side layout
-          <div className="flex w-full h-full">
-            <div className="w-1/2 border-r">
-              <Editor
-                height="100%"
-                defaultLanguage="markdown"
-                value={content}
-                onChange={onContentChange}
-                theme="vs-dark"
-                options={{
-                  minimap: { enabled: false },
-                  fontSize: 14,
-                  lineNumbers: "on",
-                  wordWrap: "on",
-                  automaticLayout: true,
-                  scrollBeyondLastLine: false,
-                  padding: { top: 16, bottom: 16 },
-                }}
-              />
-            </div>
-            <div className="w-1/2 bg-background">{renderPreview()}</div>
-          </div>
-        ) : (
-          // Preview only
-          <div className="w-full h-full bg-background">{renderPreview()}</div>
-        )}
+    <div className={`flex flex-col h-full ${className}`}>
+      <div className="flex-1">
+        <Editor
+          height="100%"
+          language="markdown"
+          value={activeFile.content}
+          onChange={handleEditorChange}
+          onMount={handleEditorDidMount}
+          theme="vs-dark"
+          options={{
+            minimap: { enabled: false },
+            fontSize: 14,
+            lineNumbers: "on",
+            roundedSelection: false,
+            scrollBeyondLastLine: false,
+            automaticLayout: true,
+            wordWrap: "on",
+            tabSize: 2,
+            insertSpaces: true,
+            renderWhitespace: "selection",
+            bracketPairColorization: { enabled: true },
+            guides: {
+              bracketPairs: true,
+              indentation: true,
+            },
+          }}
+        />
       </div>
     </div>
   );
